@@ -2,7 +2,8 @@
 This was forked from [Kushview Element](https://github.com/kushview/element).
 
 ## Features
-The concept is based on two options: mouse-only or keyboard shortcuts.
+- This software adds shortcut keys to kushview element nodes.
+- The concept is based on two options: mouse-only or keyboard shortcuts.
 
 ### Basic Functions
 - Simultaneously connect or disconnect
@@ -32,6 +33,13 @@ The concept is based on two options: mouse-only or keyboard shortcuts.
   <p>⚠️Missing GIF⚠️: You can disconnect lines simultaneously by holding down the Alt key while dragging a connected line</p>
 </details>
 
+## Caution
+Original element version: v1.2.0
+
+- VST / VST2: **Not** supported
+- VST3: Supported
+- ASIO: Supported
+- Architecture: x86-64 only
 
 ---
 
