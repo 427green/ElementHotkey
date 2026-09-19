@@ -57,7 +57,8 @@ class BlockComponent : public Component,
                        private AsyncUpdater,
                        private Value::Listener,
                        private ChangeListener,
-                       public DragAndDropTarget
+                       public DragAndDropTarget,
+                       private juce::Timer
 {
 public:
     BlockComponent() = delete;
@@ -243,6 +244,8 @@ public:
     void paintOverChildren (Graphics& g) override;
     /** @internal */
     void resized() override;
+    
+    void timerCallback() override;
 
     bool isInterestedInDragSource (const SourceDetails& details) override;
     void itemDropped (const SourceDetails& details) override;
@@ -260,6 +263,7 @@ protected:
     }
 
 private:
+    juce::uint32 pressStartTime = 0;
     friend class GraphEditorComponent;
     friend class GraphEditorView;
     friend class GraphEditor;

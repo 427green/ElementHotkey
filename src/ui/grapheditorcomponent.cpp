@@ -272,7 +272,23 @@ public:
             getDistancesFromEnds (e.x, e.y, distanceFromStart, distanceFromEnd);
             const bool isNearerSource = (distanceFromStart < distanceFromEnd);
             ViewHelpers::postMessageFor (this, new RemoveConnectionMessage (sourceFilterID, (uint32) sourceFilterChannel, destFilterID, (uint32) destFilterChannel, graph));
+            // Auto stereo disconnection on Ctrl/Cmd key press
+            if (e.mods.isRightButtonDown() || (e.mods.isAltDown() && e.mods.isLeftButtonDown()))
+            {
+            const int offset = (sourceFilterChannel % 2 == 0) ? 1 : -1;
+            const int pairedSrc = sourceFilterChannel + offset;
+            const int pairedDst = destFilterChannel + offset;
 
+            if (pairedSrc >= 0 && pairedDst >= 0)
+            {
+                const uint32 nextSrc = (uint32) pairedSrc;
+                const uint32 nextDst = (uint32) pairedDst;
+
+                ViewHelpers::postMessageFor (this, new RemoveConnectionMessage (sourceFilterID, (uint32) nextSrc, destFilterID, (uint32) nextDst, graph));
+            }
+            }
+
+            
             getGraphPanel()->beginConnectorDrag (isNearerSource ? 0 : sourceFilterID, sourceFilterChannel, isNearerSource ? destFilterID : 0, destFilterChannel, e);
         }
         else if (dragging)
@@ -974,7 +990,7 @@ void GraphEditorComponent::endDraggingConnector (const MouseEvent& e)
                 return;
 
             srcFilter = pin->getNodeId();
-            srcChannel = pin->getPortIndex();
+            srcChannel = (int) pin->getPortIndex();
         }
         else
         {
@@ -982,10 +998,29 @@ void GraphEditorComponent::endDraggingConnector (const MouseEvent& e)
                 return;
 
             dstFilter = pin->getNodeId();
-            dstChannel = pin->getPortIndex();
+            dstChannel = (int) pin->getPortIndex();
         }
 
         connectPorts (graph, srcFilter, (uint32) srcChannel, dstFilter, (uint32) dstChannel);
+
+        // Auto stereo wiring on Ctrl/Cmd key press
+        if (e.mods.isRightButtonDown() || (e.mods.isAltDown() && e.mods.isLeftButtonDown()))
+        {
+            const int offset = (srcChannel % 2 == 0) ? 1 : -1;
+            const int pairedSrc = srcChannel + offset;
+            const int pairedDst = dstChannel + offset;
+
+            if (pairedSrc >= 0 && pairedDst >= 0)
+            {
+                const uint32 nextSrc = (uint32) pairedSrc;
+                const uint32 nextDst = (uint32) pairedDst;
+
+                if (graph.canConnect (srcFilter, nextSrc, dstFilter, nextDst))
+                {
+                    connectPorts (graph, srcFilter, nextSrc, dstFilter, nextDst);
+                }
+            }
+        }
     }
 }
 

@@ -551,6 +551,78 @@ void BlockComponent::mouseDown (const MouseEvent& e)
     if (! isEnabled())
         return;
 
+    // --- Middle-click actions ---
+    if (e.mods.isMiddleButtonDown())
+    {
+        pressStartTime = juce::Time::getMillisecondCounter();
+        juce::Timer::startTimer (50); 
+
+        // Alt + Shift + Middle-click: Disconnect all ports
+        if (e.mods.isAltDown() && e.mods.isShiftDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node));
+            return;
+        }
+        // Shift + Middle-click: Disconnect inputs only
+        else if (e.mods.isShiftDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node, true, false));
+            return;
+        }
+        // Alt + Middle-click: Disconnect outputs only
+        else if (e.mods.isAltDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node, false, true));
+            return;
+        }
+        // Cmd/Ctrl + Middle-click: Duplicate node
+        else if (e.mods.isCommandDown())
+        {
+            ViewHelpers::postMessageFor(this, new DuplicateNodeMessage (node));
+            return;
+        }
+    }
+
+    // --- Left-click actions ---
+    if (e.mods.isLeftButtonDown())
+    {
+        // Shift + Left-click: Toggle bypass / power
+        if (e.mods.isShiftDown())
+        {
+            ProcessorPtr obj = node.getObject();
+            auto bypassValue = node.getPropertyAsValue (tags::bypass);
+            bool isBypassed = bypassValue.getValue();
+            bypassValue.setValue (!isBypassed);
+            if (obj->isSuspended() != node.isBypassed()){
+                obj->suspendProcessing (node.isBypassed());
+            }
+            return;
+        }
+        // Alt + Left-click: Disconnect inputs only
+        else if (e.mods.isAltDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node, true, false));
+            return;
+        }
+    }
+
+    // --- Right-click actions ---
+    if (e.mods.isRightButtonDown())
+    {
+        // Alt + Right-click: Disconnect all ports
+        if (e.mods.isAltDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node));
+            return;
+        }
+        // Cmd/Ctrl + Right-click: Duplicate node
+        else if (e.mods.isCommandDown())
+        {
+            ViewHelpers::postMessageFor(this, new DuplicateNodeMessage (node));
+            return;
+        }
+    }
+
     originalPos = localPointToGlobal (Point<int>());
     originalBounds = getBounds();
     toFront (true);
@@ -648,6 +720,29 @@ void BlockComponent::mouseDown (const MouseEvent& e)
     getGraphPanel()->updateSelection();
 }
 
+void BlockComponent::timerCallback()
+{
+    auto elapsed = juce::Time::getMillisecondCounter() - pressStartTime;
+
+    // --- Hold Action (Triggered after 400ms) ---
+    if (elapsed >= 400)
+    {
+        stopTimer();
+        auto currentMods = juce::ModifierKeys::getCurrentModifiers();
+
+        // Right-click held: Disconnect all ports
+        if (currentMods.isRightButtonDown())
+        {
+            ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node));
+            return;
+        }
+
+        // Default hold action: Disconnect inputs only
+        ViewHelpers::postMessageFor (this, new DisconnectNodeMessage (node, true, false));
+        return;
+    }
+}
+
 void BlockComponent::mouseMove (const MouseEvent& e)
 {
     Component::mouseMove (e);
@@ -730,7 +825,7 @@ void BlockComponent::mouseDrag (const MouseEvent& e)
                     continue;
 
                 auto bp = block->getNodePosition();
-                if (! vertical)
+                if (! vertical) 
                     std::swap (bp.x, bp.y);
 
                 block->moveBlockTo (roundToIntAccurate (bp.x + dx),
@@ -748,6 +843,24 @@ void BlockComponent::mouseDrag (const MouseEvent& e)
 
 void BlockComponent::mouseUp (const MouseEvent& e)
 {
+    stopTimer();
+    auto elapsed = juce::Time::getMillisecondCounter() - pressStartTime;
+
+    //Short Click Actions (Released within 400ms without modifiers)
+    if (elapsed < 400 && ! e.mods.isAnyModifierKeyDown())
+    {
+        // Toggle bypass / power state on simple click
+        auto bypassValue = node.getPropertyAsValue (tags::bypass);
+        bool isBypassed = bypassValue.getValue();
+        bypassValue.setValue (!isBypassed);
+
+        ProcessorPtr obj = node.getObject();
+        if (obj->isSuspended() != node.isBypassed())
+        {
+            obj->suspendProcessing (node.isBypassed());
+        }
+        return;
+    }
     dragging = selectionMouseDownResult = blockDrag = false;
     lastDragDeltaX = lastDragDeltaY = 0;
     if (! isEnabled())
