@@ -23,14 +23,15 @@ The concept is based on two options: mouse-only or keyboard shortcuts.
   <summary><b>🎬 Demo Mouse GIF</b></summary>
   <br>
   <img width="600" alt="ElementHotkey-mouse" src="https://github.com/user-attachments/assets/43215a2f-5a27-4989-85b6-f30d25335921" />
-  Missing GIF: You can disconnect lines simultaneously by right-dragging a connected line.
+  <p>⚠️Missing GIF⚠️: You can disconnect lines simultaneously by right-dragging a connected line.</p>
 </details>
 <details>
   <summary><b>🎬 Demo Keyboard GIF</b></summary>
   <br>
   <img width="600" alt="ElementHotkey-mouse" src="https://github.com/user-attachments/assets/f46da1b4-dd9a-4748-ab92-3a43b0498aaa" />
-  Missing GIF: You can disconnect lines simultaneously by holding down the Alt key while dragging a connected line
+  <p>⚠️Missing GIF⚠️: You can disconnect lines simultaneously by holding down the Alt key while dragging a connected line</p>
 </details>
+
 
 ---
 
